@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 var indexRoute = require('./routes/index');
-app.use('/', indexRoute);
+app.use('/', indexRoute); 
 
 http.createServer(app).listen('8888');
 console.log('Listen server on localhost:8888');
