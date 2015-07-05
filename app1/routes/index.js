@@ -1,17 +1,57 @@
 var router = require('express').Router();
 var Words = require('../models/Words');
-var RAM = require('./RAM');
 var validator = require('./validator');
+var template = require('es6-template-strings');
+
+
+function forClients(obj){
+  if (obj.constructor === Array) {
+    return obj.map(word => {
+      return {str: word.str, weight: word.weight};
+    });
+  }
+  else return {str: obj.str, weight: obj.weight};
+}
+
+//ПОЛУЧИТЬ
+
+//все слова
+router.get('/words', (req, res) => {
+  Words.find({}, (err, words) => {
+    if (err) {
+      res.status(500);
+      res.send({err: "Internal Server Error"}); 
+      return;
+    }
+    res.status(200);
+    res.send(forClients(words));
+    return;
+  });  
+});
+
+//одно слово
+router.get('/words/:str', (req, res) => {
+  var str = req.params.str;
+  Words.findOne({str: str}, (err, findedWord) => {
+    if (err) {
+      res.status(500);
+      res.send({err: "Internal Server Error"});
+      return;
+    }
+    if (findedWord === null) {
+      res.status(400);
+      res.send({err: template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но это пока не поддреживается в node
+      return;
+    }
+    res.status(200);
+    res.send(forClients(findedWord));
+    return;
+  });
+});
+
 
 //ДОБАВИТЬ
-router.post('/words', function(req, res) {
-  if (req.body.length !== 2 || 
-    !(Object.keys(req.body)[0] === 'str' && Object.keys(req.body)[1] === 'weight') || 
-    !(Object.keys(req.body)[0] === 'weight' && Object.keys(req.body)[1] === 'str')) {
-    res.status(400); 
-    res.send('Please, pass str and weigth');
-    return;
-  }
+router.post('/words', (req, res) => {
   var word = {
     str: req.body.str,
     weight: req.body.weight
@@ -19,61 +59,46 @@ router.post('/words', function(req, res) {
 
   var err = validator.addOrChangeForm(word);
   if (err){
-    res.send(err);
+    res.status(400);
+    res.send({err: err});
     return;
   } 
 
-  if (RAM.exist(word)) {
-    res.status(400);
-    res.send(word);
-    return;
-  }
-
-  word.weight = validator.toFloat(word.weight);
-  Words.create(word, function(err){
-    if (err) res.send(err);
-    else {
-      RAM.addWord(word);
-      res.status(201);
-      res.send('Word successfully added');
+  Words.findOne({str: word.str}, (err, findedWord) => {
+    if (err) {
+      res.status(500);
+      res.send({err: "Internal Server Error"});
+      return;
     }
-  });
-});
-
-
-//ПОЛУЧИТЬ
-
-//все слова
-router.get('/words', function(req, res, next) {
-  res.status(200);
-  res.json(RAM.getWords());
-});
-
-//одно слово
-router.get('/words/:str', function(req, res, next) {
-  var word = {
-    str: req.params.str,
-    weight: null
-  };
-
-  if (!RAM.exist(word)){
-    res.status(404);
-    res.send('Word is not exist');
-    return;
-  }
-
-  Words.findOne({str: word.str}, function(err, word){
-    if (err) res.send(err);
-    else {
-      res.status(200);
-      res.send({str: word.str, weight: word.weight});
+    if (findedWord !== null) {
+      res.status(400);
+      res.send({err: template('Word `${place}` is already exist', {place: findedWord.str})}); 
+      return;
     }
+
+    word.weight = validator.toFloat(word.weight);
+    Words.create(word, (err, createdWord) => {
+      if (err) {
+        res.status(500);
+        res.send({err: "Internal Server Error"});
+        return;
+      }
+      else {
+        //res.status(201);
+        //не знаю точно, что нужно возвращать -- добавленное слово или сообщение о том, что слово добавлено
+        //res.send(forClients(createdWord));
+        //res.send({msg: template('Word `${place}` successfully added', {place: createdWord.str})}); 
+        //UPD: решил просто отправлять 204
+        res.status(204);
+        return;
+      }
+    });
   });
 });
 
 
 //ИЗМЕНИТЬ
-router.put('/words/:str', function(req, res, next) {
+router.put('/words/:str', (req, res) => {
   var word = {
     str: req.params.str,
     weight: req.body.weight
@@ -82,48 +107,64 @@ router.put('/words/:str', function(req, res, next) {
   var err = validator.addOrChangeForm(word);
   if (err){
     res.status(400);
-    res.send(err);
-    return;
-  } 
-
-  if (!RAM.exist(word)){
-    res.status(400);
-    res.send('Word is not exist');
+    res.send({err: err});
     return;
   }
 
-  word.weight = validator.toFloat(word.weight);
-  Words.update({str: word.str},{$set:{weight: word.weight}}, function(err){
-    if (err) res.send(err);
-    else {
-      res.status(200);
-      RAM.setWeight(word);
-      res.send('Word successfully modified');
+  Words.findOne({str: word.str}, (err, findedWord) => {
+    if (err) {
+      res.status(500);
+      res.send({err: "Internal Server Error"});
+      return;
     }
+    if (findedWord === null) {
+      res.status(400);
+      res.send({err: template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но это пока не поддреживается в node
+      return;
+    }
+
+    findedWord.weight = validator.toFloat(word.weight);
+    findedWord.save((err) => {
+      if (err) {
+        res.status(500);
+        res.send({err: "Internal Server Error"});
+        return;
+      }
+      res.status(204);
+      //res.send({msg: template('Word `${place}` successfully modified', {place: findedWord.str})});
+      return;
+    });
   });
 });
 
 
 //УДАЛИТЬ
-router.delete('/words/:str', function(req, res, next) {
-  var word = {
-    str: req.params.str,
-    weight: null
-  };
+router.delete('/words/:str', (req, res) => {
+  var str = req.params.str;
 
-  if (!RAM.exist(word)){
-    res.status(400);
-    res.send('Word is not exist');
-    return;
-  }
-
-  Words.remove({str: word.str}, function(err){
-    if (err) res.send(err);
-    else {
-      res.status(200);
-      RAM.removeWord(word);
-      res.send('Word successfully deleted');
+  Words.findOne({str: str}, (err, findedWord) => {
+    if (err) {
+      res.status(500);
+      res.send({err: "Internal Server Error"});
+      return;
     }
+    if (findedWord === null) {
+      res.status(400);
+      res.send({err: template('Word `${place}` is not exist', {place: str})}); 
+      return;
+    }
+
+    Words.remove({str: str}, (err, removedWord) => {
+      if (err) {
+        res.status(500);
+        res.send({err: "Internal Server Error"});
+        return;
+      }
+      //res.status(200);
+      //res.send({msg: template('Word `${place}` successfully deleted', {place: str})}); 
+      res.status(204);
+      return;
+    });
   });
 });
 
