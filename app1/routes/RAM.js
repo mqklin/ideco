@@ -29,6 +29,8 @@ var RAM = function(){
     });
   });
 
+
+
   this.addWord = addWord;
   function addWord(word){
     var _word = new Word(_words.length, word);

@@ -4,9 +4,9 @@ var RAM = require('./RAM');
 var validator = require('./validator');
 
 //ДОБАВИТЬ
-router.post('/add', function(req, res) {
+router.post('/words', function(req, res) {
   var word = {
-    str: req.body.word,
+    str: req.body.str,
     weight: req.body.weight
   };
 
@@ -33,15 +33,15 @@ router.post('/add', function(req, res) {
 
 
 //ПОЛУЧИТЬ
-router.get('/get', function(req, res, next) {
+router.get('/words', function(req, res, next) {
   res.json(RAM.getWords());
 });
 
 
 //ИЗМЕНИТЬ
-router.put('/change', function(req, res, next) {
+router.put('/words/:str', function(req, res, next) {
   var word = {
-    str: req.body.word,
+    str: req.params.str,
     weight: req.body.weight
   };
 
@@ -50,6 +50,11 @@ router.put('/change', function(req, res, next) {
     res.send(err);
     return;
   } 
+
+  if (!RAM.exist(word)){
+    res.send('word is not exist');
+    return;
+  }
 
   word.weight = validator.toFloat(word.weight);
   Words.update({str: word.str},{$set:{weight: word.weight}}, function(err){
@@ -63,10 +68,10 @@ router.put('/change', function(req, res, next) {
 
 
 //УДАЛИТЬ
-router.delete('/delete', function(req, res, next) {
+router.delete('/words/:str', function(req, res, next) {
   var word = {
-    str: req.body.word,
-    weight: req.body.weight
+    str: req.params.str,
+    weight: null
   };
 
   if (!RAM.exist(word)){
@@ -82,22 +87,6 @@ router.delete('/delete', function(req, res, next) {
     }
   });
 });
-
-
-//СОСЧИТАТЬ ВЕС СЛОВ
-router.post('/text', function(req, res) {
-  var text = req.body.text;
-
-  var err = validator.textForm(text);
-  if (err){
-    res.send(err);
-    return;
-  } 
-
-  res.send(RAM.getTextWeight(text));
-});
-
-
 
 
 module.exports = router;
