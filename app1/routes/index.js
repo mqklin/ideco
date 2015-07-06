@@ -3,55 +3,166 @@ var Words = require('../models/Words');
 var validator = require('./validator');
 var template = require('es6-template-strings');
 
-
-function forClients(obj){
-  if (obj.constructor === Array) {
-    return obj.map(word => {
-      return {str: word.str, weight: word.weight};
-    });
+function resToGetWords(words){
+  return {
+    "words": words.map(word => {
+      return {
+        "str": word.str, 
+        "weight": word.weight,
+        "links": [
+          {
+            "href": "/word/" + word.str,
+            "rel": "self",
+            "method": "GET"
+          },
+          {
+            "href": "/word/" + word.str,
+            "rel": "edit",
+            "method": "PUT",
+            "require": {
+              "weight": "Number"
+            }
+          },
+          {
+            "href": "/word/" + word.str,
+            "rel": "delete",
+            "method": "DELETE"
+          }
+        ]
+      };
+    }),
+    "links": [
+      {
+        "href": "/word",
+        "rel": "list",
+        "method": "GET"
+      },
+      {
+          "href": "/word",
+          "rel": "create",
+          "method": "POST",
+          "require": {
+            "str": "String",
+            "weight": "Number"
+          }
+      }
+    ]
   }
-  else return {str: obj.str, weight: obj.weight};
+}
+
+function resToGetWord(word){
+  return {
+    "word": {
+      "str": word.str, 
+      "weight": word.weight,
+      "links": [
+        {
+          "href": "/word/" + word.str,
+          "rel": "self",
+          "method": "GET"
+        },
+        {
+          "href": "/word/" + word.str,
+          "rel": "edit",
+          "method": "PUT",
+          "require": {
+            "weight": "Number"
+          }
+        },
+        {
+          "href": "/word/" + word.str,
+          "rel": "delete",
+          "method": "DELETE"
+        }
+      ]
+    },
+    "links": [
+      {
+          "href": "/word",
+          "rel": "list",
+          "method": "GET"
+      },
+      {
+          "href": "/word",
+          "rel": "create",
+          "method": "POST",
+          "require": {
+            "str": "String",
+            "weight": "Number"
+          }
+      }
+    ]
+  }
+}
+
+
+router.get('/', (req, res) => {
+  res.status(200);
+  res.send({
+    "links": [
+      {
+          "href": "/word",
+          "rel": "list",
+          "method": "GET"
+      },
+      {
+          "href": "/word",
+          "rel": "create",
+          "method": "POST",
+          "require": {
+            "str": "String",
+            "weight": "Number"
+          }
+      }
+    ]
+  });
+});
+
+
+
+function send500(res){
+  res.status(500);
+  res.send({"msg": "Internal Server Error"}); 
 }
 
 //ПОЛУЧИТЬ
 
 //все слова
-router.get('/words', (req, res) => {
+router.get('/word', (req, res) => {
   Words.find({}, (err, words) => {
     if (err) {
-      res.status(500);
-      res.send({err: "Internal Server Error"}); 
+      send500(res);
       return;
     }
     res.status(200);
-    res.send(forClients(words));
+    res.send(resToGetWords(words));
     return;
-  });  
+  });
 });
 
+
 //одно слово
-router.get('/words/:str', (req, res) => {
+router.get('/word/:str', (req, res) => {
   var str = req.params.str;
   Words.findOne({str: str}, (err, findedWord) => {
     if (err) {
-      res.status(500);
-      res.send({err: "Internal Server Error"});
+      send500(res);
       return;
     }
     if (findedWord === null) {
       res.status(400);
-      res.send({err: template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но это пока не поддреживается в node
+      res.send({"msg": template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но нативные templates es6 не поддерживаются в node
       return;
     }
     res.status(200);
-    res.send(forClients(findedWord));
+    res.send(resToGetWord(findedWord));
     return;
   });
 });
 
 
 //ДОБАВИТЬ
-router.post('/words', (req, res) => {
+router.post('/word', (req, res) => {
   var word = {
     str: req.body.str,
     weight: req.body.weight
@@ -66,8 +177,7 @@ router.post('/words', (req, res) => {
 
   Words.findOne({str: word.str}, (err, findedWord) => {
     if (err) {
-      res.status(500);
-      res.send({err: "Internal Server Error"});
+      send500(err);
       return;
     }
     if (findedWord !== null) {
@@ -79,17 +189,12 @@ router.post('/words', (req, res) => {
     word.weight = validator.toFloat(word.weight);
     Words.create(word, (err, createdWord) => {
       if (err) {
-        res.status(500);
-        res.send({err: "Internal Server Error"});
+        send500(err);
         return;
       }
       else {
-        //res.status(201);
-        //не знаю точно, что нужно возвращать -- добавленное слово или сообщение о том, что слово добавлено
-        //res.send(forClients(createdWord));
-        //res.send({msg: template('Word `${place}` successfully added', {place: createdWord.str})}); 
-        //UPD: решил просто отправлять 204
-        res.status(204);
+        res.status(201);
+        res.send(resToGetWord(createdWord));
         return;
       }
     });
@@ -98,7 +203,7 @@ router.post('/words', (req, res) => {
 
 
 //ИЗМЕНИТЬ
-router.put('/words/:str', (req, res) => {
+router.put('/word/:str', (req, res) => {
   var word = {
     str: req.params.str,
     weight: req.body.weight
@@ -113,8 +218,7 @@ router.put('/words/:str', (req, res) => {
 
   Words.findOne({str: word.str}, (err, findedWord) => {
     if (err) {
-      res.status(500);
-      res.send({err: "Internal Server Error"});
+      send500(res);
       return;
     }
     if (findedWord === null) {
@@ -126,12 +230,11 @@ router.put('/words/:str', (req, res) => {
     findedWord.weight = validator.toFloat(word.weight);
     findedWord.save((err) => {
       if (err) {
-        res.status(500);
-        res.send({err: "Internal Server Error"});
+        send500(res);
         return;
       }
-      res.status(204);
-      //res.send({msg: template('Word `${place}` successfully modified', {place: findedWord.str})});
+      res.status(200);
+      res.send(resToGetWord(findedWord));
       return;
     });
   });
@@ -139,13 +242,12 @@ router.put('/words/:str', (req, res) => {
 
 
 //УДАЛИТЬ
-router.delete('/words/:str', (req, res) => {
+router.delete('/word/:str', (req, res) => {
   var str = req.params.str;
 
   Words.findOne({str: str}, (err, findedWord) => {
     if (err) {
-      res.status(500);
-      res.send({err: "Internal Server Error"});
+      send500(res);
       return;
     }
     if (findedWord === null) {
@@ -156,13 +258,11 @@ router.delete('/words/:str', (req, res) => {
 
     Words.remove({str: str}, (err, removedWord) => {
       if (err) {
-        res.status(500);
-        res.send({err: "Internal Server Error"});
+        send500(res);
         return;
       }
-      //res.status(200);
-      //res.send({msg: template('Word `${place}` successfully deleted', {place: str})}); 
       res.status(204);
+      res.end();
       return;
     });
   });
