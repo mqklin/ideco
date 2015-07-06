@@ -223,7 +223,7 @@ router.put('/word/:str', (req, res) => {
     }
     if (findedWord === null) {
       res.status(400);
-      res.send({err: template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но это пока не поддреживается в node
+      res.send({err: template('Word `${place}` is not exist', {place: str})}); // здесь должно быть `Word ${str} is not exist`
       return;
     }
 
