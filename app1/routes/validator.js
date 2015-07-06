@@ -22,7 +22,7 @@ module.exports = {
   },
 
   toFloat: function(str){
-    return parseFloat(str.replace(',', '.'));
+    return str.replace(',', '.');
   },
 
   textForm: function(text){
