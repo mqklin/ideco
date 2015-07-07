@@ -33,6 +33,11 @@ router.post('/text', function(req, res) {
   
   _words = [];
   Words.find({}, (err, words) => {
+    if (err) {
+      res.status(500);
+      res.send({"msg": "Internal Server Error"});
+      return;
+    }
     words.forEach(word => _words.push(word));
     var textWords = text.split(/[^a-zA-Z]+/g);
     if (textWords[0] === "") textWords.shift();
