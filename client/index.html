@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" type="text/css" href="./style.css" />
+    <script src="./jquery-1.11.1.min.js"></script>
+    <script src="./init.js"></script>
+    
+  </head>
+  <body>
+      
+    <div id="header">
+    <h1>Ideco probation</h1>
+    </div>
+
+    <div id="app1">
+      <h2 id="app1header">App1</h2>
+      <table id="wordsTable">
+        <tr>
+          <th>Word</th>
+          <th>Weight</th>
+          <th>EDIT?</th>
+          <th>DELETE?</th>
+        </tr>
+      </table>
+      <button id="addNewWordBtn" onclick="div_show()"> Add new word </button>
+    </div>
+
+
+
+    <div id="app2">
+      <h2 id="app2header">App2</h2>
+      <textarea id="textarea" placeholder="Type your text here..."></textarea>
+      <button id="getWeightBtn" onclick="getWeight()">Get weight</button>
+      <span id="weightSpan"></span>
+    </div>
+
+
+    <div id="addNewWordForm">
+      <div id="addNewWordPopup">
+        <form>
+          <span  style="cursor:pointer" onclick ="div_hide()"> &#10006;</span>
+          <input id="str" placeholder="Word" >
+          <input id="weight" placeholder="Weight" >
+          <button onclick="addWord()">Add</button>
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>

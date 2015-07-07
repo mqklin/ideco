@@ -1,0 +1,123 @@
+body {
+  background-color: #b0c4de;
+}
+
+#header{
+  color: #F50A0A;
+  position: fixed;
+  top: 5px;
+  left: 570px;
+}
+
+#app1{
+  color: #081D78;
+  position: fixed;
+  top: 100px;
+  left: 270px;
+}
+
+#app2 {
+  color: #081D78;
+  position: fixed;
+  top: 100px;
+  left: 980px;
+}
+
+#textarea {
+  background-color: #F2B6B6;
+  position: absolute;
+  left: -145px;
+  height: 200px;
+  width: 350px;
+  resize: none;
+}
+
+#getWeightBtn {
+  position: absolute;
+  height: 21px;
+  width: 90px;
+  top: 285px;
+  left: -12px;
+  font-family: helvetica, arial, sans-serif;
+  font-size: 10pt;
+}
+
+
+
+#app1header {
+  position: relative;
+  left: 12px;
+  top: 8px;
+}
+
+#app2header {
+  position: relative;
+  left: 7px;
+  top: 8px;
+}
+
+#wordsTable {
+  font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+  width: 100%;
+  border-collapse: collapse;
+  border: 2px solid #5B18F2;
+  position: relative;
+  left: -125px;
+}
+
+#wordsTable th {
+  font-size: 13pt;
+  border: 2px solid #5B18F2;
+}
+
+#wordsTable td {
+  font-family: helvetica, arial, sans-serif;
+  font-size: 10pt;
+  text-align: center;
+  border-collapse: collapse;
+  border: 1px solid #5B18F2;
+  border-right: 2px solid #5B18F2;
+}
+
+#wordsTable th, td {
+  padding: 15px 15px 15px 15px;
+}
+
+#addNewWordBtn {
+  position: relative;
+  left: -13px;
+  top: 8px;
+}
+
+
+#addNewWordForm {
+  width:100%;
+  height:100%;
+  opacity:.95;
+  top:0;
+  left:0;
+  display:none;
+  position:fixed;
+  background-color:#313131;
+  overflow:auto
+}
+
+
+#addNewWordPopup {
+  position:absolute;
+  left:50%;
+  top:17%;
+  margin-left:-202px;
+  font-family:'Raleway',sans-serif
+}
+
+
+#weightSpan {
+  position: absolute;
+  top: 330px;
+  left: 6px;
+  font-family: helvetica, arial, sans-serif;
+  font-weight: bold;
+  font-size: 25pt;
+}
+
