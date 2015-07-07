@@ -3,6 +3,8 @@ var Words = require('../models/Words');
 var validator = require('./validator');
 var template = require('es6-template-strings');
 
+
+//GET ALL WORDS
 function resToGetWords(words){
   return {
     "words": words.map(word => {
@@ -50,6 +52,8 @@ function resToGetWords(words){
   }
 }
 
+
+//GET/POST/PUT WORD
 function resToGetWord(word){
   return {
     "word": {
@@ -95,7 +99,14 @@ function resToGetWord(word){
   }
 }
 
+//INTERNAL SERVER ERROR
+function send500(res){
+  res.status(500);
+  res.send({"msg": "Internal Server Error"}); 
+}
 
+
+//GET ROOT
 router.get('/', (req, res) => {
   res.status(200);
   res.send({
@@ -119,15 +130,7 @@ router.get('/', (req, res) => {
 });
 
 
-
-function send500(res){
-  res.status(500);
-  res.send({"msg": "Internal Server Error"}); 
-}
-
-//ПОЛУЧИТЬ
-
-//все слова
+//GET ALL WORDS
 router.get('/word', (req, res) => {
   Words.find({}, (err, words) => {
     if (err) {
@@ -141,7 +144,7 @@ router.get('/word', (req, res) => {
 });
 
 
-//одно слово
+//GET WORD
 router.get('/word/:str', (req, res) => {
   var str = req.params.str;
   Words.findOne({str: str}, (err, findedWord) => {
@@ -151,7 +154,7 @@ router.get('/word/:str', (req, res) => {
     }
     if (findedWord === null) {
       res.status(400);
-      res.send({"msg": template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`, но нативные templates es6 не поддерживаются в node
+      res.send({"msg": template('Word `${place}` is not exist', {place: str})}); // здесь должно было быть `Word ${str} is not exist`
       return;
     }
     res.status(200);
@@ -161,7 +164,7 @@ router.get('/word/:str', (req, res) => {
 });
 
 
-//ДОБАВИТЬ
+//POST WORD
 router.post('/word', (req, res) => {
   var word = {
     str: req.body.str,
@@ -202,7 +205,7 @@ router.post('/word', (req, res) => {
 });
 
 
-//ИЗМЕНИТЬ
+//PUT WORD
 router.put('/word/:str', (req, res) => {
   var word = {
     str: req.params.str,
@@ -241,7 +244,7 @@ router.put('/word/:str', (req, res) => {
 });
 
 
-//УДАЛИТЬ
+//DELETE WORD
 router.delete('/word/:str', (req, res) => {
   var str = req.params.str;
 
